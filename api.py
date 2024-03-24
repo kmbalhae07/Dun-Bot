@@ -1,6 +1,7 @@
 import requests
 import json
 import secret
+import grade
 from typing import Union
 from mabu import card_info
 
@@ -57,7 +58,7 @@ def get_character_reputation(server: str, character_name: str) -> Union[dict, No
         return None, None, None
     
 
-# 아이템 등급
+# 아이템 등급 관련
 def get_item_id(item_name: str) -> Union[str, None]:
     url = "https://api.neople.co.kr/df/items"
     params = {
@@ -72,9 +73,8 @@ def get_item_id(item_name: str) -> Union[str, None]:
         if data['rows']:
             return data['rows'][0]['itemId']  # 첫 번째 검색 결과의 아이템 ID 반환
     return None
-
-def get_today_item_grade() -> str:
-    item_name = "리버시블 레더 코트"
+    
+def get_today_item_grade(item_name: str) -> str:
     item_id = get_item_id(item_name)
 
     if not item_id:
@@ -90,12 +90,52 @@ def get_today_item_grade() -> str:
 
     if response.status_code == 200:
         data = json.loads(response.text)
-        return data.get('itemGradeValue')
+        return {'grade_value': data.get('itemGradeValue'), 'grade_name': data.get('itemGradeName')}
     else:
         print(f"아이템 등급을 가져오는 중 오류가 발생했습니다. 응답 코드: {response.status_code}")
         return None
-    
-item_grade = get_today_item_grade()
+
+def get_today_item_Status(item_name: str) -> dict:
+    item_id = get_item_id(item_name)
+
+    if not item_id:
+        print(f"{item_name}을(를) 찾을 수 없습니다.")
+        return None
+
+    url = f"https://api.neople.co.kr/df/items/{item_id}/shop"
+    params = {
+        'apikey': API_KEY
+    }
+
+    response = requests.get(url=url, params=params)
+
+    if response.status_code == 200:
+        data = json.loads(response.text)
+        return data.get('itemStatus')
+    else:
+        print(f"아이템 세부 상태를 가져오는 중 오류가 발생했습니다. 응답 코드: {response.status_code}")
+        return None       
+
+def get_max_grade_status(item_name: str) -> dict:
+    item_id = get_item_id(item_name)
+
+    if not item_id:
+        print(f"{item_name}을(를) 찾을 수 없습니다.")
+        return None
+
+    url = f"https://api.neople.co.kr/df/items/{item_id}"
+    params = {
+        'apikey': API_KEY
+    }
+
+    response = requests.get(url=url, params=params)
+
+    if response.status_code == 200:
+        data = json.loads(response.text)
+        return data.get('itemStatus')
+    else:
+        print(f"100% 상태 아이템 세부 상태를 가져오는 중 오류가 발생했습니다. 응답 코드: {response.status_code}")
+        return None
 
 # 마부 관련 함수들
 def get_card_info_by_part(job_type: str, part: str) -> dict:
