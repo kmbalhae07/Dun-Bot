@@ -151,6 +151,12 @@ def print_card_info(job_type: str) -> dict:
         return card_info[job_type]
     else:
         return None
-
-
-
+    
+# 카드 이미지 출력 (mabu.py에서 귀찮아가꼬 코드로 만들었음)
+def get_card_image_url(card_name: str) -> str:
+    item_id = get_item_id(card_name)
+    if item_id:
+        return f"https://img-api.neople.co.kr/df/items/{item_id}"
+    else:
+        print("카드 이미지 URL을 가져올 수 없음")
+        return None

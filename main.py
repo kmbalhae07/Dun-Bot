@@ -42,7 +42,6 @@ async def 명성(ctx, server, character_name):
 @bot.command()
 async def 등급(ctx):
     item_names = grade.get_item_names()
-    embed = discord.Embed(title="오늘의 아이템 등급", colour=0xff7676)
 
     parts = list(item_names.keys())
     num_parts = len(parts)
@@ -64,15 +63,15 @@ async def 등급(ctx):
                 if item_status_100:
                     status_diff_text = ""  # 두 스탯의 차이를 나타내는 문자열 초기화
                     for status in item_status:
-                        if status['name'] not in ["모험가 명성", "내구도", "버프력"]:
+                        if status['name'] in ["힘", "체력", "지능", "정신력"]:
                             status_name = status['name']
-                            status_value = status['value']
+                            status_value = int(status['value'])
                             status_text = f"{status_value}"
                             
                             # 100% 상태의 스탯 가져오기
                             for status_100 in item_status_100:
                                 if status_100['name'] == status_name:
-                                    status_value_100 = status_100['value']
+                                    status_value_100 = int(status_100['value'])
                                     break
                             else:
                                 status_value_100 = 0  # 만약 100% 상태의 스탯이 없다면 0으로 설정
@@ -89,9 +88,10 @@ async def 등급(ctx):
             else:
                 part_text += "등급 정보를 가져오지 못했습니다."
 
-            embed = discord.Embed(title=f"{part}", colour=0xff7676)
+            embed = discord.Embed(title="오늘의 아이템 등급", colour=0xff7676)
             embed.add_field(name=f"상세 스탯", value=part_text.strip(), inline=False)
             embed.set_footer(text=f"페이지 {part_index + 1}/{num_parts}")
+
             return embed
         else:
             return None
@@ -152,33 +152,51 @@ async def print_card_info_pagination(ctx, job_type: str, card_info: dict):
         except TimeoutError:
             break
 
+
 def parse_part_cards(part_name, card_info):
-    formatted_card_info = ""  # 카드 정보를 저장할 변수
+    formatted_card_info = ""
     if isinstance(card_info, dict):
-        for card_name, card_stats in card_info.items():
-            formatted_card_info += f"{part_name} 카드 목록:\n"  # 각 부위의 이름을 출력
-            formatted_card_info += f"{card_name}\n"
-            formatted_card_info += f"해당 부위: {part_name}\n"  # 해당 부위를 나타내는 문구 추가
-            for stat, value in card_stats.items():
+        for part_stats, stats in card_info.items():
+            formatted_card_info += f"해당 부위: {part_stats}\n"
+            for stat, value in stats.items():
                 formatted_card_info += f"- {stat}: {value}\n"
-            formatted_card_info += "\n"  # 각 카드 정보 끝에 개행 추가
+            formatted_card_info += "\n"
     elif isinstance(card_info, str):
         formatted_card_info += f"{part_name}: {card_info}\n"
 
     return formatted_card_info
 
 
-
+# card_stats = 물마독공 / 모속강
+# card_stats_value = +30 / +15
+# card_name = 멸절의 폭룡왕 바칼 카드
+# part_cards = {'물리/마법/독립 공격력': '+30', '모든 속성 강화': '+15'}
 def create_embed(job_type, card_info, current_page, num_pages):
     embed = discord.Embed(title=f"{job_type} 직업의 카드 목록 (페이지 {current_page + 1}/{num_pages})",
                           colour=0xff7676)
-
+    
+    # 현재 페이지에 해당하는 카드 정보 가져오기
     page_cards = list(card_info.items())[current_page][1]
-    for part, part_cards in page_cards.items():
-        part_text = ""
-        for card_name, card_info in part_cards.items():
-            part_text += parse_part_cards(card_name, card_info)
-        embed.add_field(name=f"{part}", value=part_text.strip(), inline=False)
+    
+    for card_name, part_cards in page_cards.items():
+        # 현재 페이지에 해당하는 부위 정보 가져오기
+        current_part = list(card_info.items())[current_page][0]
+        part_text = f"해당 부위: {current_part}\n" 
+        part_text_added = False
+
+        for card_stats, card_status_value in part_cards.items():  
+            card_image_url = api.get_card_image_url(card_name)
+            if card_image_url:
+                embed.set_image(url=card_image_url)
+            else:
+                print("아무것도 안나와")
+            
+            part_text += parse_part_cards(card_stats, card_status_value)  
+            part_text_added = True
+
+        if part_text_added:
+            embed.add_field(name=f"| {card_name}", value=part_text.strip(), inline=False)
+    
     return embed
 
 bot.run(TOKEN)
