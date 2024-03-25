@@ -116,6 +116,7 @@ def get_today_item_Status(item_name: str) -> dict:
         print(f"아이템 세부 상태를 가져오는 중 오류가 발생했습니다. 응답 코드: {response.status_code}")
         return None       
 
+# 100% 등급짜리 아이템 갖고오기
 def get_max_grade_status(item_name: str) -> dict:
     item_id = get_item_id(item_name)
 
@@ -152,11 +153,34 @@ def print_card_info(job_type: str) -> dict:
     else:
         return None
     
-# 카드 이미지 출력 (mabu.py에서 귀찮아가꼬 코드로 만들었음)
-def get_card_image_url(card_name: str) -> str:
-    item_id = get_item_id(card_name)
+# 이미지 출력
+def image_url(item_name: str) -> str:
+    item_id = get_item_id(item_name)
     if item_id:
         return f"https://img-api.neople.co.kr/df/items/{item_id}"
     else:
         print("카드 이미지 URL을 가져올 수 없음")
         return None
+    
+def get_dungeon_reputation():
+    return {
+        "아스라한": 53680,
+        "이면경계 마스터": 55034,
+        "이면경계 익스": 51527,
+        "이면경계 노멀": 44872,
+        "상급던전 마스터": 54098,
+        "상급던전 익스": 47624,
+        "상급던전 노멀": 36132
+    }
+
+def dungeon_comparison(reputation: int, dungeon_reputation: dict) -> dict:
+    comparison_result = {}
+    #.items -> 딕셔너리의 메서드. 딕셔너리의 key & value를 모두 반환하는 이터레이터 생성
+    for dungeon, req_reputation in dungeon_reputation.items():
+        if reputation >= req_reputation:
+            comparison_result[dungeon] = 'O'
+        else:
+            difference = req_reputation - reputation
+            comparison_result[dungeon] = f'X (남은 명성: {difference})'
+            
+    return comparison_result
