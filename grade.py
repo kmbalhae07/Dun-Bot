@@ -53,11 +53,3 @@ def get_item_names_weapon():
         "중검" : "내딛은 자의 중검",
         "코어블레이드" : "내딛은 자의 코어블레이드"
     }
-# 무기는 종류 넘 많은데 ㅠㅠ 후에 추가하기
-
-# itemStatus - 장비 아이템 수치 정보
-# itemGradeName - 아이템 등급명
-# itemGradeValue - 아이템 등급 수치 (1~100%)
-# itemStatus - 장비 아이템 수치 정보
-
-# itemStatus -> [name] : 물리 방어력 / 힘 / 체력 / 지능 / 정신력 / 버프력 
