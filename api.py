@@ -4,6 +4,8 @@ import secret
 import grade
 from typing import Union
 from mabu import card_info
+import sys
+print(sys.path)
 
 API_KEY = secret.API_KEY
 
@@ -164,13 +166,13 @@ def image_url(item_name: str) -> str:
     
 def get_dungeon_reputation():
     return {
-        "아스라한": 53680,
-        "이면경계 마스터": 55034,
-        "이면경계 익스": 51527,
-        "이면경계 노멀": 44872,
-        "상급던전 마스터": 54098,
-        "상급던전 익스": 47624,
-        "상급던전 노멀": 36132
+        "아스라한 (53680)": 53680,
+        "이면경계 마스터 (55034)": 55034,
+        "이면경계 익스 (51527)": 51527,
+        "이면경계 노멀 (44872)": 44872,
+        "상급던전 마스터 (54098)": 54098,
+        "상급던전 익스 (47624)": 47624,
+        "상급던전 노멀 (36132)": 36132
     }
 
 def dungeon_comparison(reputation: int, dungeon_reputation: dict) -> dict:

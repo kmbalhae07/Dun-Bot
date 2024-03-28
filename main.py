@@ -1,10 +1,10 @@
 import discord
-import sys
 import grade
 from discord.ext import commands
 import api
 import secret
 import mabu
+print(discord.__file__)
 
 TOKEN = secret.TOKEN
 API_KEY = secret.API_KEY
@@ -287,12 +287,8 @@ async def 던전(ctx, server, character_name):
     dungeon_reputation = api.get_dungeon_reputation() 
     dungeon_comparison_result = api.dungeon_comparison(reputations[0], dungeon_reputation)
 
-    print(f"reputations: {reputations}\n")
-    print(f"dungeon_reputation: {dungeon_reputation}\n")
-    print(f"dungeon_comparison_result: {dungeon_comparison_result}\n")
-
     for dungeon, result in dungeon_comparison_result.items():
-        embed.add_field(name=f'| {dungeon}', value=result, inline=False)
+        embed.add_field(name=f'| {dungeon}\n', value=result, inline=False)
     
     await ctx.send(embed=embed)
 
