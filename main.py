@@ -1,4 +1,5 @@
 import discord
+import sys
 import grade
 from discord.ext import commands
 import api
@@ -188,7 +189,7 @@ async def 등급(ctx, *, weapon_name: str = None):
                 reaction, user = await bot.wait_for(
                     "reaction_add",
                     check=lambda reaction, user: user == ctx.author
-                                                and str(reaction.emoji) in PAGINATION_EMOJIS,
+                                                    and str(reaction.emoji) in PAGINATION_EMOJIS,
                     timeout=60,
                 )
                 await message.remove_reaction(reaction, user)
