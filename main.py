@@ -1,13 +1,12 @@
 import discord
 import grade
+import os
 from discord.ext import commands
 import api
-import secret
 import mabu
-print(discord.__file__)
 
-TOKEN = secret.TOKEN
-API_KEY = secret.API_KEY
+TOKEN = os.environ.get('DUNBOT_TOKEN')
+API_KEY = os.environ.get('DUN_API')
 
 intents = discord.Intents.all()
 bot = commands.Bot(command_prefix='!', intents=intents)
@@ -19,7 +18,7 @@ async def on_ready():
 
 @bot.event
 async def on_guild_join(guild):
-    channel = await guild.create_text_channel('던봇용 채널')
+    channel = await guild.create_text_cha1nnel('던봇용 채널')
     await channel.send('안녕하세요! 이 채널은 던봇 전용 채널입니다.')
 
 @bot.command()

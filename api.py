@@ -1,13 +1,12 @@
 import requests
 import json
-import secret
-import grade
+import os
 from typing import Union
 from mabu import card_info
 import sys
 print(sys.path)
 
-API_KEY = secret.API_KEY
+API_KEY = os.environ.get('DUN_API')
 
 # 던파 서버
 SERVER_NAME_TO_ID = {
