@@ -25,8 +25,8 @@ async def on_guild_join(guild):
 async def 명령어(ctx):
     embed = discord.Embed(title="밑에 있는 목록을 참고해주세요!",
                           colour=0xff7676)
-    embed.add_field(name="!명성 서버 닉네임", value="캐릭터의 명성 및 외형을 확인할 수 있어요.\n Ex) !명성 카인 ABC", inline=False)
-    embed.add_field(name="!던전 서버 닉네임", value="캐릭터의 명성에 따라 갈 수 있는 던전 목록 및 남은 명성을 알려줘요.\n Ex) !마부 딜러", inline=False)
+    embed.add_field(name="!캐릭터 서버 닉네임", value="캐릭터의 명성, 외형, 다녀온 레이드&레기온 목록을 확인할 수 있어요.\n Ex) !캐릭터 카인 ABC", inline=False)
+    embed.add_field(name="!던전 서버 닉네임", value="캐릭터의 명성에 따라 갈 수 있는 던전 목록 및 남은 명성을 알려줘요.\n Ex) !던전 카인 ABC", inline=False)
     embed.add_field(name="!등급", value="방어구 및 악세사리들의 오늘의 등급 및 세부정보를 확인할 수 있어요.\n Ex) !등급", inline=False)
     embed.add_field(name="!등급 무기종류", value="무기의 오늘의 등급 및 세부정보를 확인할 수 있어요.\n Ex) !무기 빗자루", inline=False)
     embed.add_field(name="!마부 딜러 or 버퍼", value="현 기준(아스라한) 극마부 목록들을 확인할 수 있어요.\n Ex) !마부 딜러", inline=False)
@@ -34,22 +34,45 @@ async def 명령어(ctx):
     await ctx.send(embed=embed)
 
 @bot.command()
-async def 명성(ctx, server, character_name):
-    reputations, character_image, job_GrowName = api.get_character_reputation(server, character_name)
-    embed = discord.Embed(title=f'캐릭명 : {character_name}',colour=0xff7676)
+async def 캐릭터(ctx, server, character_name):
+    reputations, character_image, job_GrowName = api.character(server, character_name)
+    embed = discord.Embed(title=f'캐릭명 : {character_name}', colour=0xff7676)
 
     if reputations is None:
-        embed.set_footer(text = '캐릭터의 명성 정보를 가져오는 데 실패했습니다.')
-        await ctx.send(embed = embed)
+        embed.set_footer(text='캐릭터의 정보를 가져오는 데 실패했습니다.')
+        await ctx.send(embed=embed)
         return
 
-    # 명성 , 직업 나타나게 하게
-    embed.add_field(name='| 명성', value = reputations[0])
-    embed.add_field(name='| 직업', value = job_GrowName)
+    # 명성, 직업 나타나게 하게
+    embed.add_field(name='| 명성', value=reputations[0])
+    embed.add_field(name='| 직업', value=job_GrowName)
 
     if character_image:
         embed.set_image(url=character_image)
-        await ctx.send(embed = embed)
+        
+    homework_dict = api.get_timeline_info(server, character_name)
+    print("데이터:", homework_dict)
+    homework_string = ""
+    if homework_dict:
+        homework_string += "다녀온 레이드 목록\n"   
+        for raid_name in ["기계 혁명", "아스라한"]:
+            if raid_name in homework_dict and this_week_thursday < datetime.datetime.strptime(homework_dict[raid_name], '%Y-%m-%d %H:%M') < next_thursday:
+                homework_string += f"- {raid_name} : ✅\n"
+            else:
+                homework_string += f"- {raid_name} : ❌\n"
+
+        homework_string += "\n다녀온 레기온 목록\n"
+        for region_name in ["차원회랑", "어둑섬"]:
+            if region_name in homework_dict and this_week_thursday < datetime.datetime.strptime(homework_dict[region_name], '%Y-%m-%d %H:%M') < next_thursday:
+                homework_string += f"- {region_name} : ✅\n"
+            else:
+                homework_string += f"- {region_name} : ❌\n"
+
+    if homework_string:
+        embed.description = homework_string
+        await ctx.send(embed=embed)
+
+
 
 @bot.command()
 async def 등급(ctx, *, weapon_name: str = None):
@@ -275,7 +298,7 @@ def create_embed(job_type, card_info, current_page, num_pages):
 
 @bot.command()
 async def 던전(ctx, server, character_name):
-    reputations, _, _ = api.get_character_reputation(server, character_name)
+    reputations, _, _ = api.character(server, character_name)
     embed = discord.Embed(title='갈 수 있는 던전 목록', colour=0xff7676)
 
     if reputations is None:
