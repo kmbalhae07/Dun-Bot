@@ -5,6 +5,8 @@ from discord.ext import commands
 import api
 import mabu
 
+this_week_thursday, next_thursday = api.calculate_thursday_dates()
+
 TOKEN = os.environ.get('DUNBOT_TOKEN')
 API_KEY = os.environ.get('DUN_API')
 
@@ -62,7 +64,7 @@ async def 캐릭터(ctx, server, character_name):
                 homework_string += f"- {raid_name} : ❌\n"
 
         homework_string += "\n다녀온 레기온 목록\n"
-        for region_name in ["차원회랑", "어둑섬"]:
+        for region_name in ["이스핀즈", "차원회랑", "어둑섬"]:
             if region_name in homework_dict and this_week_thursday < datetime.datetime.strptime(homework_dict[region_name], '%Y-%m-%d %H:%M') < next_thursday:
                 homework_string += f"- {region_name} : ✅\n"
             else:

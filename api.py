@@ -21,8 +21,35 @@ SERVER_NAME_TO_ID = {
         '전체': 'all'
     }
 
-# 캐릭터 명성
-def get_character_reputation(server: str, character_name: str) -> Union[dict, None]:
+def get_character_id(server: str, character_name: str) -> Union[dict, None]:
+    url = f"https://api.neople.co.kr/df/servers/{SERVER_NAME_TO_ID[server]}/characters"
+    params = {
+        'characterName': character_name,
+        'apikey': API_KEY
+    }
+
+    response = requests.get(url=url, params=params)
+    
+    # API 호출이 실패한 경우
+    if response.status_code != 200:
+        return None, None, None, None
+
+    data = json.loads(response.text)
+
+    characters = data.get('rows', [])
+
+    if characters:
+        character_info = characters[0]
+
+        # 캐릭터 ID
+        character_id = character_info.get('characterId')
+
+        return character_id
+    else:
+        return None
+
+# 캐릭터
+def character(server: str, character_name: str) -> Union[dict, None]:
     url = f"https://api.neople.co.kr/df/servers/{SERVER_NAME_TO_ID[server]}/characters"
     params = {
         'characterName': character_name,
@@ -58,6 +85,56 @@ def get_character_reputation(server: str, character_name: str) -> Union[dict, No
     else:
         return None, None, None
     
+def get_timeline(server: str, character_name: str) -> Union[dict, None]:
+    character_id = get_character_id(server, character_name)
+
+    url = f"https://api.neople.co.kr/df/servers/{SERVER_NAME_TO_ID[server]}/characters/{character_id}"
+    params = {
+        'characterName': character_name,
+        'apikey': API_KEY
+    }
+
+    response = requests.get(url=url, params=params)
+    
+    # API 호출이 실패한 경우
+    if response.status_code != 200:
+        return None
+
+    data = json.loads(response.text)
+    return data
+
+def get_timeline_info(server: str, character_name: str) -> dict:
+    homework_dict = {}
+    this_week_thursday, next_thursday = calculate_thursday_dates()
+
+    timeline_data = get_timeline(server, character_name)
+    if timeline_data:
+        for timeline_code in [201, 209]:
+            url = f"https://api.neople.co.kr/df/servers/{SERVER_NAME_TO_ID[server]}/characters/{timeline_data['characterId']}/timeline"
+            params = {
+                'timelineCode': timeline_code,
+                'apikey': API_KEY
+            }
+            response = requests.get(url=url, params=params)
+            
+            if response.status_code != 200:
+                print(f"Failed to fetch timeline data for code {timeline_code}")
+                continue
+
+            timeline_info = json.loads(response.text)
+            for row in timeline_info['timeline']['rows']:
+                if timeline_code == 209 and row['name'] == '레기온 클리어' and row['data'].get('regionName', '') != 'N/A':
+                    event_date = datetime.datetime.strptime(row['date'], '%Y-%m-%d %H:%M')
+                    if this_week_thursday < event_date < next_thursday:
+                        homework_dict[row['data']['regionName']] = row['date']
+                if timeline_code == 201 and row['name'] == '레이드' and row['data'].get('raidName', '') != 'N/A':
+                    event_date = datetime.datetime.strptime(row['date'], '%Y-%m-%d %H:%M')
+                    if this_week_thursday < event_date < next_thursday:
+                        homework_dict[row['data']['raidName']] = row['date']
+    
+    return homework_dict
+
+
 
 # 아이템 등급 관련
 def get_item_id(item_name: str) -> Union[str, None]:
@@ -179,9 +256,21 @@ def dungeon_comparison(reputation: int, dungeon_reputation: dict) -> dict:
     #.items -> 딕셔너리의 메서드. 딕셔너리의 key & value를 모두 반환하는 이터레이터 생성
     for dungeon, req_reputation in dungeon_reputation.items():
         if reputation >= req_reputation:
-            comparison_result[dungeon] = 'O'
+            comparison_result[dungeon] = '✅'
         else:
             difference = req_reputation - reputation
-            comparison_result[dungeon] = f'X (남은 명성: {difference})'
+            comparison_result[dungeon] = f'❌ (남은 명성: {difference})'
             
     return comparison_result
+
+def calculate_thursday_dates():
+    current_date = datetime.datetime.now()
+
+    days_until_next_thursday = (3 - current_date.weekday()) % 7
+    next_thursday = current_date + datetime.timedelta(days=days_until_next_thursday)
+    next_thursday = datetime.datetime.combine(next_thursday, datetime.time(10, 0))
+    next_thursday -= datetime.timedelta(hours=3)
+
+    this_week_thursday = next_thursday - datetime.timedelta(days=7)
+
+    return this_week_thursday, next_thursday
